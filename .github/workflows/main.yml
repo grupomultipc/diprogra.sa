@@ -33,11 +33,16 @@ jobs:
             echo "Folder deleted successfully"
           fi
       
-      - name: Commit and push
+      - name: Git configuration and push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git pull origin main --no-rebase || true
+          git fetch origin main
+          git reset --hard origin/main
           git add -A
-          git commit -m "Extract diprogra-github.zip to root" || echo "No changes to commit"
-          git push origin main
+          if git diff --cached --exit-code > /dev/null; then
+            echo "No changes to commit"
+          else
+            git commit -m "Extract diprogra-github.zip to root"
+            git push origin HEAD:main
+          fi
