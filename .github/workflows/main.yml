@@ -1,0 +1,24 @@
+name: Decompress ZIP
+
+on:
+  workflow_dispatch
+
+jobs:
+  decompress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Extract ZIP
+        run: unzip -o diprogra-github.zip
+      
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+      
+      - name: Commit and push
+        run: |
+          git add .
+          git commit -m "Extract diprogra-github.zip contents" || true
+          git push
