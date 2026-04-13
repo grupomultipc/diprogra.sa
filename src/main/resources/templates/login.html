@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIPROGRA — Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- face-api.js: se carga local si ya se descargó, si no desde CDN -->
+<script id="faceapi-script"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#0f1923;min-height:100vh;display:grid;place-items:center;padding:16px}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(27,67,50,.45),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(45,106,79,.25),transparent 50%);pointer-events:none}
+.card{background:#fff;border-radius:20px;padding:36px 40px;width:100%;max-width:430px;box-shadow:0 25px 80px rgba(0,0,0,.4);position:relative;z-index:1}
+.logo{text-align:center;margin-bottom:26px}
+.logo-mark{width:52px;height:52px;background:#1B4332;border-radius:13px;display:grid;place-items:center;margin:0 auto 12px;font-size:1.4rem}
+.logo h1{font-size:1.5rem;font-weight:800;color:#1B4332;letter-spacing:-.03em}
+.logo p{font-size:.7rem;color:#6B7280;font-family:'IBM Plex Mono',monospace;margin-top:3px}
+.step{display:none}.step.active{display:block}
+.step-dots{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:22px}
+.sdot{width:8px;height:8px;border-radius:50%;background:#E5E7EB;transition:all .25s}
+.sdot.active{background:#1B4332;width:24px;border-radius:4px}
+.sdot.done{background:#40916C}
+.fg{margin-bottom:13px}
+label{display:block;font-size:.65rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+input[type=text],input[type=password]{width:100%;padding:11px 13px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;color:#111;outline:none;transition:border-color .15s}
+input:focus{border-color:#1B4332;box-shadow:0 0 0 3px rgba(27,67,50,.1)}
+.btn{width:100%;padding:11px;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.btn-green{background:#1B4332;color:#fff}.btn-green:hover{background:#145228}
+.btn-ghost{background:transparent;color:#6B7280;border:1.5px solid #E5E7EB;margin-top:6px}.btn-ghost:hover{border-color:#1B4332;color:#1B4332;background:transparent}
+.btn-amber{background:#D97706;color:#fff}.btn-amber:hover{background:#B45309}
+.btn-blue{background:#1D4ED8;color:#fff}.btn-blue:hover{background:#1e40af}
+.btn:disabled{background:#9CA3AF!important;cursor:default}
+.alert{border-radius:9px;padding:10px 14px;font-size:.76rem;margin-bottom:12px;display:none;line-height:1.5}
+.alert.show{display:block}
+.ae{background:#FEF2F2;color:#DC2626;border:1px solid #FCA5A5}
+.ao{background:#F0FDF4;color:#15803D;border:1px solid #86EFAC}
+.ai{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.aw{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A}
+.cam-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#111827;border-radius:14px;overflow:hidden;margin-bottom:12px}
+.cam-wrap video,.cam-wrap canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.face-oval{width:156px;height:196px;border:3px solid rgba(255,255,255,.55);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);transition:border-color .3s,box-shadow .3s;pointer-events:none}
+.face-oval.det{border-color:#40916C;box-shadow:0 0 0 5px rgba(64,145,108,.25)}
+.face-oval.cap{border-color:#F59E0B;box-shadow:0 0 0 7px rgba(245,158,11,.2);animation:fp .7s infinite}
+@keyframes fp{0%,100%{box-shadow:0 0 0 4px rgba(245,158,11,.2)}50%{box-shadow:0 0 0 12px rgba(245,158,11,.04)}}
+.cam-status{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:4px 14px;border-radius:20px;font-size:.68rem;font-family:'IBM Plex Mono',monospace;color:#fff;white-space:nowrap;max-width:94%;text-align:center}
+.cam-loading{position:absolute;inset:0;background:#111827;display:grid;place-items:center;z-index:10}
+.cam-loading p{color:#9CA3AF;font-size:.75rem;font-family:'IBM Plex Mono',monospace;text-align:center;line-height:1.7}
+.prog-wrap{margin-bottom:12px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:.67rem;color:#6B7280;margin-bottom:4px;font-family:'IBM Plex Mono',monospace}
+.prog-bar{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden}
+.prog-fill{height:6px;background:linear-gradient(90deg,#1B4332,#40916C);border-radius:3px;transition:width .3s}
+.divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:#9CA3AF;font-size:.68rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#E5E7EB}
+.hints{margin-top:12px;padding:11px 13px;background:#F9FAFB;border-radius:9px;font-size:.68rem;color:#6B7280;font-family:'IBM Plex Mono',monospace;line-height:1.8}
+.hints b{color:#374151;display:block;margin-bottom:3px}
+.pending-box{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.pending-title{font-size:.76rem;font-weight:700;color:#B45309;margin-bottom:5px}
+.pending-info{font-size:.72rem;color:#92400E;line-height:1.5}
+/* Download prompt */
+.download-prompt{background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:14px;text-align:center}
+.download-prompt .dp-icon{font-size:2rem;margin-bottom:6px}
+.download-prompt .dp-title{font-size:.85rem;font-weight:700;color:#0369A1;margin-bottom:5px}
+.download-prompt .dp-desc{font-size:.73rem;color:#0c4a6e;line-height:1.5;margin-bottom:10px}
+.download-prompt code{background:#e0f2fe;padding:2px 7px;border-radius:4px;font-size:.72rem;font-family:'IBM Plex Mono',monospace;color:#0369A1}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="card">
+  <div class="logo">
+    <div class="logo-mark">🌿</div>
+    <h1>DIPROGRA S.A.</h1>
+    <p>SISTEMA DE INVENTARIO</p>
+  </div>
+  <div class="step-dots">
+    <div class="sdot active" id="dot1"></div>
+    <div class="sdot" id="dot2"></div>
+    <div class="sdot" id="dot3"></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step active" id="step1">
+    <div style="font-size:.88rem;font-weight:700;color:#1B4332;margin-bottom:14px">Paso 1 — Credenciales</div>
+    <div class="alert ae" id="e1"></div>
+    <div class="fg"><label>Usuario</label>
+      <input id="u1" type="text" placeholder="Nombre de usuario" autocomplete="username"></div>
+    <div class="fg"><label>Contraseña</label>
+      <input id="p1" type="password" placeholder="Contraseña" autocomplete="current-password"></div>
+    <button class="btn btn-green" id="btnS1" onclick="paso1()">Continuar →</button>
+    <div class="hints"><b>Usuarios de acceso:</b>
+      admin / admin123 — Administrador<br>
+      usuario1 / user1pass — Editor<br>
+      usuario2 / user2pass — Solo lectura
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step2">
+    <div style="font-size:.88rem;font-weight:700;color:#1B4332;margin-bottom:4px" id="s2title">Paso 2 — Verificación Facial</div>
+    <div style="font-size:.73rem;color:#6B7280;margin-bottom:12px" id="s2sub">Mira a la cámara para confirmar tu identidad</div>
+    <div class="alert ae" id="e2"></div>
+    <div class="alert ao" id="o2"></div>
+    <div class="alert ai" id="i2"></div>
+    <div class="alert aw" id="w2"></div>
+
+    <!-- Download prompt (shown when models not available) -->
+    <div class="download-prompt" id="dl-prompt" style="display:none">
+      <div class="dp-icon">📦</div>
+      <div class="dp-title">Modelos faciales no instalados</div>
+      <div class="dp-desc">
+        Para usar reconocimiento facial necesitas descargar los modelos de IA una sola vez.<br>
+        <b>Ejecuta</b> <code>DESCARGAR_MODELOS_FACIALES.bat</code> y luego recarga esta página.<br><br>
+        O usa el botón de abajo para ingresar sin reconocimiento facial.
+      </div>
+    </div>
+
+    <div id="cam-section">
+      <div class="cam-wrap">
+        <video id="vid2" autoplay muted playsinline></video>
+        <canvas id="cvs2"></canvas>
+        <div class="face-oval" id="oval2"></div>
+        <div class="cam-status" id="cst2">Verificando modelos...</div>
+        <div class="cam-loading" id="cld2">
+          <p id="cld-msg">⏳ Cargando modelos...<br><span style="font-size:.62rem;color:#6B7280">Un momento por favor</span></p>
+        </div>
+      </div>
+      <div class="prog-wrap" id="progWrap" style="display:none">
+        <div class="prog-lbl"><span id="progLbl">Capturando</span><span id="progCnt">0/5</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="goStep(1)">← Volver al inicio</button>
+    <div class="divider">Cámara no disponible o problemas de reconocimiento</div>
+    <button class="btn btn-amber" onclick="solicitarAdmin()">📩 Solicitar acceso al Administrador</button>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step3">
+    <div style="text-align:center;padding:8px 0 18px">
+      <div style="font-size:2.2rem;margin-bottom:8px" id="s3ico">⏳</div>
+      <div style="font-size:.92rem;font-weight:700;color:#B45309;margin-bottom:6px" id="s3title">Esperando aprobación</div>
+      <div style="font-size:.75rem;color:#6B7280;line-height:1.6">
+        Tu solicitud fue enviada al Administrador.<br>
+        Esta pantalla se actualiza automáticamente cada 5 segundos.
+      </div>
+    </div>
+    <div class="pending-box">
+      <div class="pending-title">Solicitud pendiente</div>
+      <div class="pending-info" id="s3detail">Aguardando respuesta del administrador...</div>
+    </div>
+    <div class="alert ao" id="o3"></div>
+    <div class="alert ae" id="e3"></div>
+    <div style="margin-top:8px;padding:10px;background:#F9FAFB;border-radius:9px;font-size:.72rem;color:#6B7280;font-family:'IBM Plex Mono',monospace;text-align:center">
+      Si el admin te da un token, ingrésalo aquí:<br>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="text" id="token-input" placeholder="Token de acceso..." style="flex:1;padding:8px 10px;font-size:.8rem">
+        <button onclick="usarToken()" style="padding:8px 14px;background:#1B4332;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:700">✓ Usar</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost" onclick="cancelarSolicitud()" style="margin-top:8px">✕ Cancelar y volver</button>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const CDN_FACEAPI = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+const LOCAL_FACEAPI = '/static/weights/face-api.min.js';
+const LOCAL_WEIGHTS = '/static/weights';
+const CDN_WEIGHTS   = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+const THRESHOLD = 0.50;
+const SAMPLES   = 5;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let curUser = null, stream = null, modelsOk = false;
+let scanIv = null, pollIv = null, descs = [];
+let weightsPath = null;  // set after checking local vs CDN
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Intento silencioso con timeout de 3s — nunca bloquea el login
+  try {
+    const status = await Promise.race([
+      fetch('/api/face/models_status').then(r => r.json()),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+    ]);
+    if (status.local) {
+      try {
+        await Promise.race([
+          loadScript(LOCAL_FACEAPI),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+        ]);
+        weightsPath = LOCAL_WEIGHTS;
+        console.log('✓ Face models: LOCAL');
+        return;
+      } catch(e) { /* continuar */ }
+    }
+  } catch(e) { /* sin modelos locales */ }
+
+  // Intento CDN con timeout de 4s
+  try {
+    await Promise.race([
+      loadScript(CDN_FACEAPI),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+    ]);
+    weightsPath = CDN_WEIGHTS;
+    console.log('✓ Face models: CDN');
+  } catch(e) {
+    weightsPath = null;
+    console.warn('✗ Face models no disponibles — login normal activo');
+  }
+});
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('active', i===n);
+    const d = document.getElementById('dot'+i);
+    d.className = 'sdot' + (i===n?' active':i<n?' done':'');
+  });
+  if (n !== 2) stopCam();
+  if (n !== 3) stopPoll();
+  if (n === 2) startCam();
+}
+
+// ─── STEP 1 ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('u1').addEventListener('keydown', e => e.key==='Enter' && document.getElementById('p1').focus());
+  document.getElementById('p1').addEventListener('keydown', e => e.key==='Enter' && paso1());
+});
+
+async function paso1() {
+  const btn  = document.getElementById('btnS1');
+  const user = document.getElementById('u1').value.trim();
+  const pass = document.getElementById('p1').value;
+  hide('e1');
+  if (!user || !pass) { show('e1','Ingresa usuario y contraseña'); return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  const r = await fetch('/api/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:user, password:pass})
+  });
+  const d = await r.json();
+  btn.disabled = false; btn.innerHTML = 'Continuar →';
+  if (!d.ok) { show('e1', d.error||'Usuario o contraseña incorrectos'); return; }
+  // Acceso directo — sin reconocimiento facial
+  window.location = '/';
+}
+
+// ─── STEP 2 ───────────────────────────────────────────────────────────────────
+async function startCam() {
+  descs = [];
+  document.getElementById('progWrap').style.display = 'none';
+  document.getElementById('oval2').className = 'face-oval';
+  hide('e2'); hide('o2'); hide('i2'); hide('w2');
+  document.getElementById('dl-prompt').style.display = 'none';
+
+  const cld  = document.getElementById('cld2');
+  const cst  = document.getElementById('cst2');
+  const cldMsg = document.getElementById('cld-msg');
+
+  // Verificar si faceapi está disponible (sin esperar — ya se intentó en init)
+  cld.style.display = 'grid';
+  cldMsg.innerHTML  = '⏳ Verificando modelos...<br><span style="font-size:.62rem;color:#6B7280">Un momento</span>';
+  await new Promise(r => setTimeout(r, 400)); // pequeña pausa visual
+
+  if (typeof faceapi === 'undefined') {
+    // Modelos no disponibles — mostrar opciones alternas inmediatamente
+    cld.style.display = 'none';
+    document.getElementById('cam-section').style.display = 'none';
+    document.getElementById('dl-prompt').style.display = 'block';
+    show('w2', '⚠ Modelos faciales no disponibles. Ejecuta <b>DESCARGAR_MODELOS_FACIALES.bat</b> para instalarlos, o usa el botón naranja para ingresar con ayuda del administrador.');
+    return;
+  }
+
+  // Load models
+  cldMsg.innerHTML = '⏳ Cargando modelos de IA...<br><span style="font-size:.62rem;color:#6B7280">Primera vez puede tardar ~10s</span>';
+  try {
+    if (!modelsOk) {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(weightsPath),
+        faceapi.nets.faceLandmark68Net.loadFromUri(weightsPath),
+        faceapi.nets.faceRecognitionNet.loadFromUri(weightsPath),
+      ]);
+      modelsOk = true;
+    }
+  } catch(e) {
+    cld.style.display = 'none';
+    document.getElementById('cam-section').style.display = 'none';
+    document.getElementById('dl-prompt').style.display = 'block';
+    show('w2', '⚠ No se pudieron cargar los modelos. Ejecuta <b>DESCARGAR_MODELOS_FACIALES.bat</b> para instalarlos localmente.');
+    return;
+  }
+
+  cld.style.display = 'none';
+
+  // Start webcam
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: 'user' }
+    });
+    const vid = document.getElementById('vid2');
+    vid.srcObject = stream;
+    await vid.play();
+    cst.textContent = 'Cámara activa — coloca tu rostro en el óvalo';
+    startScan();
+  } catch(err) {
+    const msg = err.name === 'NotAllowedError'
+      ? 'Cámara bloqueada — permite el acceso en la barra del navegador'
+      : 'Cámara no disponible en este equipo';
+    cst.textContent = '❌ ' + msg;
+    show('w2', '⚠ ' + msg + '. Usa el botón naranja para solicitar acceso al Administrador.');
+  }
+}
+
+function stopCam() {
+  if (scanIv) { clearInterval(scanIv); scanIv = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const v = document.getElementById('vid2');
+  if (v) v.srcObject = null;
+}
+
+function startScan() {
+  scanIv = setInterval(async () => {
+    const vid = document.getElementById('vid2');
+    if (!vid || vid.readyState < 2) return;
+
+    const det = await faceapi
+      .detectSingleFace(vid, new faceapi.TinyFaceDetectorOptions({inputSize:224, scoreThreshold:0.4}))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    const oval = document.getElementById('oval2');
+    const cst  = document.getElementById('cst2');
+
+    if (!det) {
+      oval.className  = 'face-oval';
+      cst.textContent = 'Buscando rostro...';
+      return;
+    }
+
+    // Face detected — check mode
+    const fs  = await (await fetch('/api/face/status')).json();
+    const uf  = fs.find(u => u.username === curUser);
+    const reg = !uf || !uf.face_registrado;
+
+    oval.className = 'face-oval cap';
+    descs.push(Array.from(det.descriptor));
+
+    const pw   = document.getElementById('progWrap');
+    const fill = document.getElementById('progFill');
+    const cnt  = document.getElementById('progCnt');
+    const lbl  = document.getElementById('progLbl');
+    pw.style.display  = 'block';
+    fill.style.width  = (descs.length / SAMPLES * 100) + '%';
+    cnt.textContent   = descs.length + '/' + SAMPLES;
+    lbl.textContent   = reg ? 'Registrando rostro' : 'Capturando muestras';
+    cst.textContent   = (reg ? '📸 Registrando... ' : '📸 Verificando... ') + descs.length + '/' + SAMPLES;
+
+    if (descs.length >= SAMPLES) {
+      clearInterval(scanIv); scanIv = null;
+      if (reg) await doRegister(descs);
+      else     await doVerify(descs);
+    }
+  }, 400);
+}
+
+async function doVerify(ds) {
+  const avg = ds[0].map((_,i) => ds.reduce((s,d) => s+d[i], 0) / ds.length);
+  document.getElementById('cst2').textContent = '🔍 Verificando identidad...';
+  const r = await fetch('/api/face/verify', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({descriptor:avg, username:curUser})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('oval2').className = 'face-oval det';
+    document.getElementById('cst2').textContent = '✅ Verificado ' + Math.round((1-d.distancia)*100) + '%';
+    show('o2', '✅ Identidad confirmada. Redirigiendo...');
+    setTimeout(() => window.location = '/', 1200);
+  } else if (d.error === 'no_face_registered') {
+    show('i2', 'ℹ Este usuario no tiene rostro registrado. Pide al administrador que lo registre desde el panel de Rostros.');
+    document.getElementById('cst2').textContent = 'Sin rostro registrado';
+  } else {
+    show('e2', '❌ Rostro no reconocido (distancia: ' + d.distancia + '). Intenta de nuevo.');
+    document.getElementById('cst2').textContent = 'Reintentando en 2s...';
+    descs = [];
+    setTimeout(() => startScan(), 2200);
+  }
+}
+
+async function doRegister(ds) {
+  document.getElementById('cst2').textContent = '💾 Registrando rostro...';
+  const r = await fetch('/api/face/register', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:curUser, descriptors:ds})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('oval2').className = 'face-oval det';
+    document.getElementById('cst2').textContent = '✅ Rostro registrado';
+    show('o2', '✅ Rostro registrado correctamente. Bienvenido/a.');
+    setTimeout(() => window.location = '/', 1500);
+  } else {
+    show('e2', d.error || 'Error al registrar rostro');
+    document.getElementById('cst2').textContent = 'Error — reintentando...';
+    descs = [];
+    setTimeout(() => startScan(), 2000);
+  }
+}
+
+// ─── ADMIN FALLBACK ───────────────────────────────────────────────────────────
+async function solicitarAdmin() {
+  if (!curUser) { show('e2','Primero ingresa tus credenciales en el paso 1'); return; }
+  const motivo = stream ? 'Rostro no reconocido por la cámara' : 'Cámara no disponible';
+  const r = await fetch('/api/face/request-admin', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:curUser, motivo})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('s3detail').innerHTML =
+      '<b>Usuario:</b> ' + curUser + '<br><b>Motivo:</b> ' + motivo +
+      '<br><b>Enviado:</b> ' + new Date().toLocaleTimeString('es-GT');
+    goStep(3);
+    startPoll();
+  } else {
+    show('e2', d.error || 'Error al enviar solicitud');
+  }
+}
+
+function startPoll() { pollIv = setInterval(checkPoll, 5000); }
+function stopPoll()  { if (pollIv) { clearInterval(pollIv); pollIv = null; } }
+
+async function checkPoll() {
+  // Check sessionStorage for token pushed by admin
+  const tk = sessionStorage.getItem('diprogra_face_token');
+  if (tk) { sessionStorage.removeItem('diprogra_face_token'); await usarTokenStr(tk); }
+}
+
+async function usarToken() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) return;
+  await usarTokenStr(token);
+}
+
+async function usarTokenStr(token) {
+  const r = await fetch('/api/face/login-token', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({token})
+  });
+  const d = await r.json();
+  stopPoll();
+  if (d.ok) {
+    document.getElementById('s3ico').textContent = '✅';
+    document.getElementById('s3title').textContent = '¡Acceso aprobado!';
+    document.getElementById('s3title').style.color = '#15803D';
+    show('o3', '✅ Bienvenido/a ' + d.nombre + '. Redirigiendo al sistema...');
+    setTimeout(() => window.location = '/', 1500);
+  } else {
+    show('e3', d.error || 'Token inválido o expirado. Solicita uno nuevo al administrador.');
+  }
+}
+
+function cancelarSolicitud() {
+  stopPoll();
+  curUser = null;
+  document.getElementById('u1').value = '';
+  document.getElementById('p1').value = '';
+  goStep(1);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function show(id, msg) {
+  const el = document.getElementById(id);
+  el.innerHTML = msg; el.classList.add('show');
+}
+function hide(id) {
+  document.getElementById(id).classList.remove('show');
+}
+</script>
+</body>
+</html>
