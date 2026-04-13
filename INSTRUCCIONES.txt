@@ -1,0 +1,39 @@
+═══════════════════════════════════════════════════
+  DIPROGRA v2.1 — INSTRUCCIONES DE INSTALACIÓN
+═══════════════════════════════════════════════════
+
+IMPORTANTE: Este paquete contiene el CÓDIGO FUENTE.
+Debes compilarlo antes de ejecutar.
+
+─── PASO 1: Copia estos archivos ───────────────────
+Copia TODA la carpeta "diprogra-corregido" y 
+reemplaza tu carpeta "diprogra-java" anterior.
+
+─── PASO 2: Edita tu contraseña ────────────────────
+Abre: src/main/resources/application.properties
+Cambia la línea:
+  spring.datasource.password=admin123
+Por tu contraseña de PostgreSQL.
+
+─── PASO 3: Compila ────────────────────────────────
+Doble clic en: COMPILAR.bat
+(Espera 1-3 minutos la primera vez)
+
+─── PASO 4: Ejecuta ────────────────────────────────
+Doble clic en: INICIAR.bat
+Ingresa tu contraseña de PostgreSQL cuando la pida.
+
+─── Credenciales de acceso ─────────────────────────
+  admin   / admin123
+  editor1 / editor123
+  viewer1 / viewer123
+
+─── Si tienes problemas ────────────────────────────
+• "Error de conexión": verifica que PostgreSQL esté
+  corriendo y la contraseña sea correcta.
+• "Puerto ocupado": cambia server.port=8080 a 8081
+  en application.properties.
+• El sistema crea automáticamente las carpetas:
+  ./datos-diprogra/imagenes
+  ./datos-diprogra/respaldos
+═══════════════════════════════════════════════════
