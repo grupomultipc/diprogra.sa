@@ -12,19 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Extract ZIP and flatten structure
+      - name: Extract ZIP
         run: |
           if [ -f diprogra-github.zip ]; then
             unzip -o diprogra-github.zip
-            # Mover contenidos de diprogra-java120426 a la raíz
-            if [ -d diprogra-java120426 ]; then
-              mv diprogra-java120426/* ./
-              rmdir diprogra-java120426
-              echo "Structure flattened successfully"
-            fi
+            echo "ZIP extracted successfully"
           else
             echo "diprogra-github.zip not found"
             exit 1
+          fi
+      
+      - name: Flatten structure and delete source folder
+        run: |
+          if [ -d diprogra-java120426 ]; then
+            # Mover contenidos a la raíz
+            mv diprogra-java120426/* ./
+            # Borrar la carpeta vacía
+            rm -rf diprogra-java120426
+            echo "Folder deleted successfully"
           fi
       
       - name: Commit and push
@@ -33,5 +38,5 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A
           git status
-          git commit -m "Extract and flatten diprogra-github.zip contents" || echo "No changes to commit"
+          git commit -m "Extract and clean diprogra-github.zip contents" || echo "No changes to commit"
           git push origin main
