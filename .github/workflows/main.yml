@@ -11,32 +11,41 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check if ZIP exists
+        run: |
+          ls -lah diprogra-github.zip || exit 1
       
       - name: Extract ZIP
         run: |
-          if [ -f diprogra-github.zip ]; then
-            unzip -o diprogra-github.zip
-            echo "ZIP extracted successfully"
+          unzip -o diprogra-github.zip -d temp_extract/
+          echo "ZIP extracted to temp_extract"
+      
+      - name: Move files to root and cleanup
+        run: |
+          cd temp_extract
+          if [ -d diprogra-java120426 ]; then
+            # Mover archivos
+            mv diprogra-java120426/* ../
+            cd ..
+            rm -rf temp_extract
+            echo "Files moved and temp folder deleted"
           else
-            echo "diprogra-github.zip not found"
+            echo "diprogra-java120426 not found"
             exit 1
           fi
       
-      - name: Flatten structure and delete source folder
+      - name: List files to verify
         run: |
-          if [ -d diprogra-java120426 ]; then
-            # Mover contenidos a la raíz
-            mv diprogra-java120426/* ./
-            # Borrar la carpeta vacía
-            rm -rf diprogra-java120426
-            echo "Folder deleted successfully"
-          fi
+          echo "Current directory structure:"
+          ls -la
       
       - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git status
-          git commit -m "Extract and clean diprogra-github.zip contents" || echo "No changes to commit"
+          git commit -m "Extract diprogra-github.zip to root" || echo "No changes to commit"
           git push origin main
