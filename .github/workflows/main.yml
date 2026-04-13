@@ -6,19 +6,27 @@ on:
 jobs:
   decompress:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Extract ZIP
-        run: unzip -o diprogra-github.zip
-      
-      - name: Configure git
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          if [ -f diprogra-github.zip ]; then
+            unzip -o diprogra-github.zip
+            echo "ZIP extracted successfully"
+          else
+            echo "diprogra-github.zip not found"
+            exit 1
+          fi
       
       - name: Commit and push
         run: |
-          git add .
-          git commit -m "Extract diprogra-github.zip contents" || true
-          git push
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git status
+          git commit -m "Extract diprogra-github.zip contents" || echo "No changes to commit"
+          git push origin main
