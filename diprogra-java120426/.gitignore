@@ -1,0 +1,30 @@
+# Maven build output
+target/
+*.jar
+*.war
+*.ear
+
+# Maven local (no subir Maven completo)
+maven/
+
+# Archivos de datos locales (respaldos y fotos se manejan aparte)
+datos-diprogra/imagenes/
+datos-diprogra/respaldos/*.db
+
+# Windows scripts
+COMPILAR.bat
+INICIAR.bat
+contrasena.bmp
+
+# IDEs
+.idea/
+*.iml
+.eclipse/
+.settings/
+.classpath
+.project
+nbproject/
+
+# OS
+.DS_Store
+Thumbs.db
